@@ -100,7 +100,13 @@
             $("div#result").html(msg)
         }, 'json');
     }
-    function updateStatus(){
+
+    /**
+     * fetches updated status from cmus via cmus-remote command.
+     * Request is made to python ui server @ http://192.168.1.7:8080
+     * 'cmus-remote -Q'
+     */
+    function updateStatus() {
         $.ajax({url: '/status', dataType: 'json', context: $("div#status"), success: function(response){
             if (response.playing == true) {var status = '<p>'}
             if (response.playing == false) {var status = '<p class="gray">'}
@@ -125,17 +131,27 @@
             this.html(status)
         }})
     }
+
+    // declare even listeners for interface elements
+
+    // status button click listener
     $(".status-btn").on('click', (function() {
         updateStatus()
     }))
+
+    // click listener for all other interface control elements
     $(".cmd-btn").on('click', (function(){
         var cmd = $(this).attr('title');
         postCommand(cmd);
         updateStatus();
     }))
+
+    //
     $("div#result").on('click', (function(){
         $(this).empty()
     }))
+
+    
     Zepto(function() {
         updateStatus()
     })
