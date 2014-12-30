@@ -30,13 +30,37 @@ def read_config(config_file):
 def index():
     return {'host':settings['cmus_host']}
 
+@route('/get_playlist_data')
+def get_playlist_data():
+    #playlist = open('/root/.cmus/lib.pl', 'r')
+    playlist = open('/root/test.pl', 'r')
+
+    print "Playlist data requested from databank."
+    return playlist.read()
+
 @post('/cmd')
 def run_command():
-    legal_commands = {'Play':'player-play', 'Stop':'player-stop', 'Next':'player-next', 'Previous':'player-prev', 'Increase Volume':'vol +1%', 'Reduce Volume':'vol -1%', 'Mute':'vol 0'}
+    cmddata = request.POST.get('data', default="") 
     command = request.POST.get('command', default=None)
+
+    legal_commands = {'Play':'player-play', 'Stop':'player-stop', 'Pause':'player-pause', 'Next':'player-next', 'Previous':'player-prev', 'Increase Volume':'vol +10%', 'Reduce Volume':'vol -10%', 'Mute':'vol 0', 'Set Volume':'vol ' + cmddata, 'Search':'/' + cmddata, 'Filter':'filter ' + cmddata}
+    
     if legal_commands.has_key(command):
         try:
-            out = Remote('-C', legal_commands[command]) 
+            if(command == 'Filter'): 
+
+                out = Remote('-C', legal_commands[command])
+                out = Remote('-C', 'win-add-q')
+                out = Remote('-C', 'player-next')
+                out = Remote('-C', 'filter')
+               
+                print out.stdout
+                print out.stderr
+            else:
+                out = Remote('-C', legal_commands[command]) 
+            
+            print out.stdout
+            
             return {'result':out.exit_code, 'output':out.stdout}
         except: 
             return {'result':False}
