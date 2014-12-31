@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>cmus on {{host}}</title>
+    <title>cmus on 192.168.1.7</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" type="text/css" href="/static/kube.min.css"/>
@@ -139,7 +139,7 @@
 <!-- end playlist listing -->
 
 <footer>
-    <p class="small gray-light"><i class="icon-play-circle"></i> This is <code>cmus</code> running on {{host}}.</p>
+    <p class="small gray-light"><i class="icon-play-circle"></i> This is <code>cmus</code> running on 192.168.1.7.</p>
 </footer>
 
 </div>
@@ -157,6 +157,7 @@
     // define basic app functions
     function postCommand(command, data){
         var playButton = document.getElementById('play-button');
+        var searchbar = document.getElementById('search');
         
         if(command == 'Play') {
             playButton.isPlaying    = true;
@@ -168,14 +169,19 @@
             playButton.title        = 'Play';
 
             playButton.children[0].className = 'icon-play';
+        } else if(command == 'YouTube') {
+            searchbar.value = '';
+            searchbar.blur();
+
+            $("div#result").html('<pre>Loading, please wait...</pre>');
         }
 
         $.post('/cmd', {command: command, data:(data || "0")}, function(response){
             
             if (response.result == 0) {var msg = '<p class="green label"><i class="icon-ok"></i> ' + command + '</p>'} 
             else {var msg = '<p class="red label"><i class="icon-remove"></i> ' + command + '</p>'}
-            if(command == 'Search') {
-                alert(response.output);
+            if(command == 'YouTube') {
+                msg += '<pre>Now playing from YouTube video source.</pre>';
             } else {
                 if (response.output) msg += '<pre>' + response.output + '</pre>';
             }
@@ -320,6 +326,7 @@
 
             // append playlist contents to table body
             playlistContent.forEach(function(playlistString) {
+
                 var rawSongData = playlistString.split('\n');
                 
                 var filename    = rawSongData[0].substring(1);
@@ -367,6 +374,8 @@
                     // assign pointer to current row
                     activeRow = this;
                     this.className = "active-row";
+
+                    updateStatus();
                 });
             });
 
@@ -418,6 +427,11 @@
             // check to see if input is empty
             if(this.value == '') {
                 return false;
+            }
+
+            if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi)) {
+                postCommand('YouTube', this.value);
+                return;
             }
                 
             var playlistContentWrapper  = document.getElementById('playlist-content');

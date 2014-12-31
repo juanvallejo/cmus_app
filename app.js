@@ -15,37 +15,47 @@
 * Important: Requires the following dependencies / node.js packages for local testing:
 *
 *       - socket.io 	-> node.js socket package
-*       - appbuilder    -> telerik cli tools
 *
 * TODO: Keep track of tracks requested to be played in order
 *		to enable forward / backward functionality
 * TODO: Announce received commands via WebSocket to all clients
 */
 
-var serverIsInDebugMode = true;								// false if app is running on production server | true
-															// if app is running on test server
+var serverIsInDebugMode = true;									// false if app is running on production server | true
+																// if app is running on test server
 
 // declare runtime constants
 
-var CMUS_HOST 	= '0.0.0.0';								// host running cmus (with --listen <host>)
-var CMUS_PASS	= 'password';								// cmus server password
-var CMUS_PORT	= 8000;										// port cmus server listens on
+var CMUS_HOST 		= '0.0.0.0';								// host running cmus (with --listen <host>)
+var CMUS_PASS		= 'password';								// cmus server password
+var CMUS_PORT		= 8000;										// port cmus server listens on
 
-var APP_PORT	= 8080;										// port app server will listen on
-var APP_HOST	= '0.0.0.0';								// localhost address for hosting app server
-var APP_INDEX	= 'views/main.html'							// defines location of main 'index.html' document
+var APP_PORT		= 8080;										// port app server will listen on
+var APP_HOST		= '0.0.0.0';								// localhost address for hosting app server
+var APP_INDEX		= 'views/main.html';						// defines location of main 'index.html' document
+var APP_PLAYLIST	= '/root/test.pl';							// defines location of main playlist file
+var APP_TEMP		= '/root/Music/youtube-downloads/temp.mp4'	// defines location of temporary youtube files
 
 // import dependencies and working modules
 
 var fs		= require('fs');
 var http	= require('http');
 var exec	= require('child_process').exec;
+var os 		= require('os');
 
 // begin environment setup logic; alter environment constants, etc.
 
-if(serverIsInDebugMode) {
-	CMUS_HOST = '192.168.1.7';
+if(os.hostname() == 'juanvallejo.local') {
+
+	serverIsInDebugMode = true;
+
+	APP_PLAYLIST		= 'static/test.pl';
+	APP_TEMP			= __dirname + '/static/temp/temp.mp4'
+
+	CMUS_HOST 			= '192.168.1.7';
 }
+
+console.log(os.hostname());
 
 // declare url request router
 // routes all requests to corresponding functions
@@ -70,6 +80,7 @@ var fileMimeTypeDefinitionsFromFileExtension = {
 	'jpeg'	: 'image/jpeg',
 	'json'	: 'application/json',
 	'js'	: 'application/javascript',
+	'pl'	: 'text/plain',
 	'png'	: 'image/png',
 	'txt'	: 'text/plain'
 };
@@ -102,16 +113,58 @@ function serveCmusStatus(request, response) {
 			return console.log('<Cmus-Remote> An error occurred executing the status command -> ' + err);
 		}
 
-		console.log(stdout);
+		var cmusStatusResponseAsJSON	= {};
+		var cmusStatusResponse			= stdout.split('\n');
+
+		cmusStatusResponseAsJSON['playing'] = false;
+
+		// set 'playing' flag to a boolean value
+		if(cmusStatusResponse[0].split(' ')[1] == 'playing') {
+			cmusStatusResponseAsJSON['playing'] = true;
+		}
+
+		delete cmusStatusResponse[0];
+
+		cmusStatusResponse.forEach(function(property) {
+
+			var propertyKeyValues = property.split(' ');
+
+			// filter out empty key-value pairs
+			if(propertyKeyValues == '') {
+				return;
+			}
+
+			if(propertyKeyValues[2] || propertyKeyValues[0] == 'file') {
+
+				var startingValueIndex			= 2;
+				var offsetKeyIndex				= 1;
+				var secondValueJoinedBySpaces 	= [];
+
+				if(propertyKeyValues[0] == 'file') {
+					startingValueIndex 	= 1;
+					offsetKeyIndex	 	= 0;
+				}
+
+				// join second value through spaces
+				for(var i = startingValueIndex; i < propertyKeyValues.length; i++) {
+					secondValueJoinedBySpaces.push(propertyKeyValues[i]);
+				}
+
+				// add to JSON response
+				cmusStatusResponseAsJSON[propertyKeyValues[offsetKeyIndex]] = secondValueJoinedBySpaces.join(' ');
+			} else {
+				// add key-value pair to JSON response
+				cmusStatusResponseAsJSON[propertyKeyValues[0]] = propertyKeyValues[1];
+			}
+		});
+
+		// send response back to client
+		response.writeHead(200, {
+			'Content-Type': 'application/json'
+		});
+
+		response.end(JSON.stringify(cmusStatusResponseAsJSON));
 	});
-
-}
-
-/**
- * @router destination
- * handles requests for root of app '/'
- */
-function serveCmusCommand(request, response) {
 
 }
 
@@ -119,8 +172,9 @@ function serveCmusCommand(request, response) {
  * @router destination
  * handles requests for app request of playlist data
  */
-function serveCmusPlaylistData() {
-
+function serveCmusPlaylistData(request, response) {
+	// serve static playlist file
+	serveStaticFile(request, response, APP_PLAYLIST);
 }
 
 /**
@@ -166,10 +220,137 @@ function serveStaticFile(request, response, staticFileDestinationOverride) {
 
 /**
  * @router destination
- * handles requests for root of app '/'
+ * handles command requests posted through the '/cmd' request
  */
 function handleCmusCommand(request, response) {
+	
+	var postData 	= '';
+	var commandData = '';
 
+	var commandResponseAsJSON = {
+		'result': '0',
+		'output': ''
+	};
+
+	request.on('data', function(chunk) {
+		postData += chunk;
+	});
+
+	request.on('end', function() {
+
+		var postDataVars 	= postData.split('&');
+		var command 		= postDataVars[0].split('=')[1];
+		var commandData 	= '0';
+
+		command = command.replace(/\+/gi, ' ');
+
+		// check to see if command data was received
+		if(postDataVars[1]) {
+			commandData = decodeURIComponent(postDataVars[1].split('=')[1]);
+			commandData = commandData.replace(/\+/gi, ' ').replace(/\'/gi, "'\"'\"'");
+
+		}
+
+		var cmusCommandFromKeyword = {
+			'Play' 				: 'player-play',
+			'Stop' 				: 'player-stop',
+			'Pause' 			: 'player-pause',
+			'Next' 				: 'player-next',
+			'Previous' 			: 'player-prev',
+			'Increase Volume' 	: 'vol +10%',
+			'Reduce Volume' 	: 'vol -10%',
+			'Mute' 				: 'vol 0',
+			'Set Volume' 		: 'vol ' + commandData,
+			'Search' 			: '/' + commandData,
+			'Filter' 			: 'filter ' + commandData,
+		};
+
+		if(cmusCommandFromKeyword[command]) {
+
+			if(command == 'Filter') {
+
+				CmusRemote('-C', cmusCommandFromKeyword[command]);
+            	CmusRemote('-C', 'win-add-q');
+            	CmusRemote('-C', 'player-next');
+            	CmusRemote('-C', 'filter');
+
+            	// send response to client
+				response.writeHead(200, {
+					'Content-Type': 'application/json'
+				});
+
+				response.end(JSON.stringify(commandResponseAsJSON));
+
+            } else {
+            	CmusRemote('-C', cmusCommandFromKeyword[command], function(err, stdout, stderr) {
+            		if(err) {
+						return console.log('<Cmus-Remote> An error occurred executing the specified command -> ' + err);
+					}
+
+					commandResponseAsJSON.output = stdout;
+
+					// send response to client
+					response.writeHead(200, {
+						'Content-Type': 'application/json'
+					});
+
+					response.end(JSON.stringify(commandResponseAsJSON));
+				});
+        	}			
+		} else {
+			// advertise cmus-remote exit code error 1
+			commandResponseAsJSON.result = '1';
+
+			// check to see that command is a YoutubeDl command
+			if(command == 'YouTube') {
+
+				YoutubeDl(commandData, function(err, stdout, stderr) {
+					if(err) {
+						return console.log('<Youtube-Dl> An error occurred executing the specified command -> ' + err);
+					}
+
+					if(serverIsInDebugMode) {
+						console.log('<Server-Debug> Ignoring request to add YouTube source audio to queue.');
+
+						response.writeHead(200, {
+							'Content-Type': 'application/json'
+						});
+						
+						return response.end(JSON.stringify(commandResponseAsJSON));
+					}
+
+					// add downloaded youtube-video audio to queue
+					CmusRemote('-C', 'add -q ' + APP_TEMP, function(err, stdout, stderr) {
+	            		if(err) {
+							return console.log('<Cmus-Remote> An error occurred executing the specified command -> ' + err);
+						}
+
+						CmusRemote('-C', 'player-next');
+            			CmusRemote('-C', 'filter');
+
+						commandResponseAsJSON.result = '0';
+						commandResponseAsJSON.output = stdout;
+
+						// send response to client
+						response.writeHead(200, {
+							'Content-Type': 'application/json'
+						});
+
+						response.end(JSON.stringify(commandResponseAsJSON));
+					});
+				});
+
+			} else {
+				// send response to client
+				response.writeHead(200, {
+					'Content-Type': 'application/json'
+				});
+
+				response.end(JSON.stringify(commandResponseAsJSON));
+			}
+		}
+
+	});
 }
 
 /**
@@ -184,13 +365,17 @@ function CmusRemote(flag, command, callback) {
 	}
 
 	if(command) {
-		command = " '" + command + "'";
+		command = ' \'' + command + '\'';
 	} else {
 		command = '';
 	}
 
 	exec('cmus-remote --server ' + CMUS_HOST + ':' + CMUS_PORT + ' --passwd ' + CMUS_PASS + ' ' + flag + command, function(err, stdout, stderr) {
-		callback.call(this, err, stdout, stderr);
+
+		if(typeof callback == 'function') {
+			callback.call(this, err, stdout, stderr);
+		}
+
 	});
 
 }
@@ -199,8 +384,19 @@ function CmusRemote(flag, command, callback) {
  * @utility command-line
  * Handles direct interaction with youtube-dl on command-line
  */
-function YoutubeDl(flags, command, callback) {
+function YoutubeDl(videoURL, callback) {
+	// handle command parsing
+	if(!videoURL) {
+		return console.log('<cmus-remote-error> a video URL argument is required.');
+	}
 
+	exec('youtube-dl -x --audio-quality 0 --exec "mv {} ' + APP_TEMP + '" ' + videoURL, function(err, stdout, stderr) {
+
+		if(typeof callback == 'function') {
+			callback.call(this, err, stdout, stderr);
+		}
+
+	});
 }
 
 // create web-interface server, run main app loop
