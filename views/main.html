@@ -445,8 +445,8 @@
 
             if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi)) {
 
-                var commandData = this.value.split('='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
-                commandData = 'https://www.youtube.com/v/' + commandData[1];
+                var commandData = this.value.split('?v='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
+                commandData = 'https://www.youtube.com/v/' + commandData[1].split('&')[0];
 
                 console.log(commandData);
 
