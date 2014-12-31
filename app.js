@@ -45,7 +45,7 @@ var os 		= require('os');
 
 // begin environment setup logic; alter environment constants, etc.
 
-if(os.hostname() == 'juanvallejo.local') {
+if(os.hostname() != 'crunchbang2') {
 
 	serverIsInDebugMode = true;
 
@@ -54,8 +54,6 @@ if(os.hostname() == 'juanvallejo.local') {
 
 	CMUS_HOST 			= '192.168.1.7';
 }
-
-console.log(os.hostname());
 
 // declare url request router
 // routes all requests to corresponding functions
@@ -315,7 +313,7 @@ function handleCmusCommand(request, response) {
 						response.writeHead(200, {
 							'Content-Type': 'application/json'
 						});
-						
+
 						return response.end(JSON.stringify(commandResponseAsJSON));
 					}
 
