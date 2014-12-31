@@ -176,16 +176,30 @@
             $("div#result").html('<pre>Loading, please wait...</pre>');
         }
 
-        $.post('/cmd', {command: command, data:(data || "0")}, function(response){
+        $.post('/cmd', {command: command, data:(data || '0')}, function(response){
             
-            if (response.result == 0) {var msg = '<p class="green label"><i class="icon-ok"></i> ' + command + '</p>'} 
-            else {var msg = '<p class="red label"><i class="icon-remove"></i> ' + command + '</p>'}
-            if(command == 'YouTube') {
-                msg += '<pre>Now playing from YouTube video source.</pre>';
+            var outputResponse = '';
+
+            if (response.result == 0) {
+                outputResponse = '<p class="green label"><i class="icon-ok"></i> ' + command + '</p>';
             } else {
-                if (response.output) msg += '<pre>' + response.output + '</pre>';
+                outputResponse = '<p class="red label"><i class="icon-remove"></i> ' + command + '</p>';
             }
-            $("div#result").html(msg)
+
+            if(command == 'YouTube') {
+                // if current source of playback is from a youtube video
+                outputResponse += '<pre>Now playing from YouTube video source.</pre>';
+                updateStatus();
+
+            } else {
+                // check to see if there is a response from the server
+                if(response.output) {
+                    outputResponse += '<pre>' + response.output + '</pre>';
+                }
+            }
+
+            $("div#result").html(msg);
+
         }, 'json');
     }
 
@@ -430,7 +444,11 @@
             }
 
             if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi)) {
-                postCommand('YouTube', this.value);
+
+                var commandData = this.value.split('?v='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
+                commandData = 'https://www.youtube.com/v/' + commandData[1];
+
+                postCommand('YouTube', commandData);
                 return;
             }
                 
