@@ -181,10 +181,10 @@ function serveCmusPlaylistData(request, response) {
  */
 function serveStaticFile(request, response, staticFileDestinationOverride) {
 
-	var staticFilePath = staticFileDestinationOverride || request.url;
+	var staticFilePath = staticFileDestinationOverride || __dirname + '/' + request.url;
 
 	// fetch file from the filesystem
-	fs.readFile(__dirname + '/' + staticFilePath, function(err, data) {
+	fs.readFile(staticFilePath, function(err, data) {
 
 		if(err) {
 			console.log('<File-System> An error occurred reading from file ' + staticFilePath + ' -> ' + err);
