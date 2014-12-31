@@ -21,7 +21,7 @@
 * TODO: Announce received commands via WebSocket to all clients
 */
 
-var serverIsInDebugMode = true;									// false if app is running on production server | true
+var serverIsInDebugMode = false;								// false if app is running on production server | true
 																// if app is running on test server
 
 // declare runtime constants
