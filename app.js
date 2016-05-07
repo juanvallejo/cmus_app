@@ -323,7 +323,7 @@ function handleCmusCommand(request, response) {
 					// add downloaded youtube-video audio to queue
 					CmusRemote('-C', 'add -q ' + APP_TEMP, function(err, stdout, stderr) {
 	            		if(err) {
-							return console.log('<Cmus-Remote> An error occurred executing the specified command -> ' + err);
+							return console.log('ERR CMUS An error occurred executing the specified command -> ' + err);
 						}
 
 						CmusRemote('-C', 'player-next');
