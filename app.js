@@ -388,7 +388,7 @@ function CmusRemote(flag, command, callback) {
 function YoutubeDl(videoURL, callback) {
 	// handle command parsing
 	if(!videoURL) {
-		return console.log('<cmus-remote-error> a video URL argument is required.');
+		return console.log('ERR CMUS a video URL argument is required.');
 	}
 
 	exec('youtube-dl -x --audio-quality 0 --exec "mv {} ' + APP_TEMP + '" ' + videoURL, function(err, stdout, stderr) {
