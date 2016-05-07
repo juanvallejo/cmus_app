@@ -46,8 +46,8 @@ var os 		= require('os');
 // begin environment setup logic; alter environment constants, etc.
 
 if(os.hostname() != 'crunchbang2') {
-
-	serverIsInDebugMode = true;
+	
+    serverIsInDebugMode = true;
 
 	APP_PLAYLIST		= 'static/test.pl';
 	APP_TEMP			= __dirname + '/static/temp/temp.mp4'
