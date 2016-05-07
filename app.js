@@ -34,7 +34,7 @@ var APP_PORT		= 8080;										// port app server will listen on
 var APP_HOST		= '0.0.0.0';								// localhost address for hosting app server
 var APP_INDEX		= 'views/main.html';						// defines location of main 'index.html' document
 var APP_PLAYLIST	= '/root/test.pl';							// defines location of main playlist file
-var APP_TEMP		= '/root/Music/youtube-downloads/temp.mp4'	// defines location of temporary youtube files
+var APP_TEMP		= '/root/Music/youtube-downloads/temp.mp4';	// defines location of temporary youtube files
 
 // import dependencies and working modules
 
@@ -45,7 +45,7 @@ var os 		= require('os');
 
 // begin environment setup logic; alter environment constants, etc.
 
-if(os.hostname() != 'crunchbang2') {
+if(os.hostname() != 'crunchbang2' || process.argv[2] == 'debug') {
 
 	serverIsInDebugMode = true;
 
@@ -55,10 +55,14 @@ if(os.hostname() != 'crunchbang2') {
 	CMUS_HOST 			= '192.168.1.7';
 }
 
+// declare runtime environment variables
+
+var queueOfPlayedFiles = [];
+
 // declare url request router
 // routes all requests to corresponding functions
 var httpRequestRouter = {
-	// dictionary of  key and values for handling client requests
+
 	'/'						: serveAppIndex,
 	'/cmd'					: handleCmusCommand,
 	'/status'				: serveCmusStatus,
@@ -134,22 +138,22 @@ function serveCmusStatus(request, response) {
 
 			if(propertyKeyValues[2] || propertyKeyValues[0] == 'file') {
 
-				var startingValueIndex			= 2;
-				var offsetKeyIndex				= 1;
-				var secondValueJoinedBySpaces 	= [];
+				var startingValueIndex				= 2;
+				var offsetKeyIndex					= 1;
+				var secondValueToBeJoinedBySpaces 	= [];
 
 				if(propertyKeyValues[0] == 'file') {
 					startingValueIndex 	= 1;
 					offsetKeyIndex	 	= 0;
 				}
 
-				// join second value through spaces
+				// join second value with spaces
 				for(var i = startingValueIndex; i < propertyKeyValues.length; i++) {
-					secondValueJoinedBySpaces.push(propertyKeyValues[i]);
+					secondValueToBeJoinedBySpaces.push(propertyKeyValues[i]);
 				}
 
 				// add to JSON response
-				cmusStatusResponseAsJSON[propertyKeyValues[offsetKeyIndex]] = secondValueJoinedBySpaces.join(' ');
+				cmusStatusResponseAsJSON[propertyKeyValues[offsetKeyIndex]] = secondValueToBeJoinedBySpaces.join(' ');
 			} else {
 				// add key-value pair to JSON response
 				cmusStatusResponseAsJSON[propertyKeyValues[0]] = propertyKeyValues[1];
@@ -255,8 +259,8 @@ function handleCmusCommand(request, response) {
 			'Pause' 			: 'player-pause',
 			'Next' 				: 'player-next',
 			'Previous' 			: 'player-prev',
-			'Increase Volume' 	: 'vol +10%',
-			'Reduce Volume' 	: 'vol -10%',
+			'Increase Volume' 	: 'vol +5%',
+			'Reduce Volume' 	: 'vol -5%',
 			'Mute' 				: 'vol 0',
 			'Set Volume' 		: 'vol ' + commandData,
 			'Search' 			: '/' + commandData,

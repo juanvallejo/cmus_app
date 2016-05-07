@@ -224,20 +224,16 @@
             if (response.playing == true) {
                 status = '<p>'
                 
-                if(!playButton.hasStarted) {
-                    playButton.isPlaying = true;
-                    playButton.children[0].className = 'icon-pause';
-                    playButton.title = 'Pause';
-                }
-            }
-            if (response.playing == false) {
+                playButton.isPlaying = true;
+                playButton.children[0].className = 'icon-pause';
+                playButton.title = 'Pause';
+
+            } else {
                 status = '<p class="gray">'
                 
-                if(!playButton.hasStarted) {
-                    playButton.isPlaying = false;
-                    playButton.title = 'Play';
-                    playButton.children[0].className = 'icon-play';
-                }
+                playButton.isPlaying = false;
+                playButton.title = 'Play';
+                playButton.children[0].className = 'icon-play';
             }
             
             if(!playButton.hasStarted) {
@@ -447,8 +443,6 @@
 
                 var commandData = this.value.split('?v='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
                 commandData = 'https://www.youtube.com/v/' + commandData[1].split('&')[0];
-
-                console.log(commandData);
 
                 postCommand('YouTube', commandData);
                 return;
