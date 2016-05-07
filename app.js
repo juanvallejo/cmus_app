@@ -33,7 +33,7 @@ var CMUS_PORT		= 8000;										// port cmus server listens on
 var APP_PORT		= 8080;										// port app server will listen on
 var APP_HOST		= '0.0.0.0';								// localhost address for hosting app server
 var APP_INDEX		= 'views/main.html';						// defines location of main 'index.html' document
-var APP_PLAYLIST	= '/root/test.pl';							// defines location of main playlist file
+var APP_PLAYLIST	= 'test.pl';							// defines location of main playlist file
 var APP_TEMP		= '/root/Music/youtube-downloads/temp.mp4';	// defines location of temporary youtube files
 
 // import dependencies and working modules
@@ -49,7 +49,7 @@ if(os.hostname() != 'crunchbang2' || process.argv[2] == 'debug') {
 
 	serverIsInDebugMode = true;
 
-	APP_PLAYLIST		= 'static/test.pl';
+	APP_PLAYLIST		= __dirname + '/test.pl';
 	APP_TEMP			= __dirname + '/static/temp/temp.mp4'
 
 	CMUS_HOST 			= '192.168.1.7';
@@ -175,7 +175,6 @@ function serveCmusStatus(request, response) {
  * handles requests for app request of playlist data
  */
 function serveCmusPlaylistData(request, response) {
-	// serve static playlist file
 	serveStaticFile(request, response, APP_PLAYLIST);
 }
 
