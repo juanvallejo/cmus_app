@@ -343,7 +343,6 @@
 				var artist      = rawSongData[5].split('tag artist ')[1] || rawSongData[4].split('tag artist ')[1] || rawSongData[6].split('tag artist ')[1] || rawSongData[7].split('tag artist')[1] || rawSongData[11].split('tag artist ')[1];
 				var album       = rawSongData[4].split('tag album ')[1] || rawSongData[6].split('tag album ')[1] || rawSongData[7].split('tag album ')[1] || rawSongData[5].split('tag album ')[1];
               
-				// cleanup data
 				title    = title ? title.trim() : 'N/A';
 				artist   = artist ? artist.trim() : 'N/A';
 				album    = album ? album.trim() : 'N/A';
