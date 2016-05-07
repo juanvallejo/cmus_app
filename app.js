@@ -299,7 +299,7 @@ function handleCmusCommand(request, response) {
 				});
         	}			
 		} else {
-			// advertise cmus-remote exit code error 1
+
 			commandResponseAsJSON.result = '1';
 
 			// check to see that command is a YoutubeDl command
