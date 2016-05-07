@@ -344,9 +344,9 @@
                 var album       = rawSongData[4].split('tag album ')[1] || rawSongData[6].split('tag album ')[1] || rawSongData[7].split('tag album ')[1] || rawSongData[5].split('tag album ')[1];
               
                // cleanup data
-               title    = title.trim();
-               artist   = artist.trim();
-               album    = album.trim();
+               title    = title ? title.trim() : 'N/A';
+               artist   = artist ? artist.trim() : 'N/A';
+               album    = album ? album.trim() : 'N/A';
                 
                 var tableRow        = document.createElement('tr');
                 var tableCellTitle  = document.createElement('td');
