@@ -362,7 +362,7 @@ function CmusRemote(flag, command, callback) {
 
 	// handle command parsing
 	if(!flag) {
-		return console.log('<cmus-remote-error> a flag argument is required.');
+		return console.log('ERR CMUS a flag argument is required.');
 	}
 
 	if(command) {
