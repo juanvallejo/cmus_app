@@ -285,7 +285,7 @@ function handleCmusCommand(request, response) {
             } else {
             	CmusRemote('-C', cmusCommandFromKeyword[command], function(err, stdout, stderr) {
             		if(err) {
-						return console.log('<Cmus-Remote> An error occurred executing the specified command -> ' + err);
+						return console.log('ERR CMUS An error occurred executing the specified command -> ' + err);
 					}
 
 					commandResponseAsJSON.output = stdout;
