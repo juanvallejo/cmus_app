@@ -337,55 +337,55 @@
             // append playlist contents to table body
             playlistContent.forEach(function(playlistString) {
 
-                var rawSongData = playlistString.split('\n');
-                var filename    = rawSongData[0].substring(1);
-                var title       = rawSongData[3].split('tag title ')[1] || rawSongData[4].split('tag title ')[1] || rawSongData[5].split('tag title ')[1] || rawSongData[6].split('tag title ')[1] || rawSongData[7].split('tag title ')[1] || rawSongData[8].split('tag title')[1] || rawSongData[10].split('tag title ')[1] || rawSongData[9].split('tag title')[1];
-                var artist      = rawSongData[5].split('tag artist ')[1] || rawSongData[4].split('tag artist ')[1] || rawSongData[6].split('tag artist ')[1] || rawSongData[7].split('tag artist')[1] || rawSongData[11].split('tag artist ')[1];
-                var album       = rawSongData[4].split('tag album ')[1] || rawSongData[6].split('tag album ')[1] || rawSongData[7].split('tag album ')[1] || rawSongData[5].split('tag album ')[1];
+				var rawSongData = playlistString.split('\n');
+				var filename    = rawSongData[0].substring(1);
+				var title       = rawSongData[3].split('tag title ')[1] || rawSongData[4].split('tag title ')[1] || rawSongData[5].split('tag title ')[1] || rawSongData[6].split('tag title ')[1] || rawSongData[7].split('tag title ')[1] || rawSongData[8].split('tag title')[1] || rawSongData[10].split('tag title ')[1] || rawSongData[9].split('tag title')[1];
+				var artist      = rawSongData[5].split('tag artist ')[1] || rawSongData[4].split('tag artist ')[1] || rawSongData[6].split('tag artist ')[1] || rawSongData[7].split('tag artist')[1] || rawSongData[11].split('tag artist ')[1];
+				var album       = rawSongData[4].split('tag album ')[1] || rawSongData[6].split('tag album ')[1] || rawSongData[7].split('tag album ')[1] || rawSongData[5].split('tag album ')[1];
               
-               // cleanup data
-               title    = title ? title.trim() : 'N/A';
-               artist   = artist ? artist.trim() : 'N/A';
-               album    = album ? album.trim() : 'N/A';
-                
-                var tableRow        = document.createElement('tr');
-                var tableCellTitle  = document.createElement('td');
-                var tableCellArtist = document.createElement('td');
-                var tableCellAlbum  = document.createElement('td');
+				// cleanup data
+				title    = title ? title.trim() : 'N/A';
+				artist   = artist ? artist.trim() : 'N/A';
+				album    = album ? album.trim() : 'N/A';
 
-                tableRow.dataset.filename  = filename;
-                tableRow.dataset.songTitle = title;
-                tableRow.dataset.artist    = artist;
-                tableRow.dataset.album     = album;
-                
-                // add html content to each table cell for row
-                tableCellTitle.innerHTML    = title; 
-                tableCellArtist.innerHTML   = artist;
-                tableCellAlbum.innerHTML    = album;
+				var tableRow        = document.createElement('tr');
+				var tableCellTitle  = document.createElement('td');
+				var tableCellArtist = document.createElement('td');
+				var tableCellAlbum  = document.createElement('td');
 
-                // append table cells to row
-                tableRow.appendChild(tableCellTitle);
-                tableRow.appendChild(tableCellArtist);
-                tableRow.appendChild(tableCellAlbum);
-                
-                playlistContentWrapper.appendChild(tableRow);
-                
-                // add click event listener to row
-                tableRow.addEventListener('click', function() {
-                    // send command to play song to server
-                    postCommand('Filter', 'artist="' + this.dataset.artist + '"&title="' + this.dataset.songTitle + '"'); 
-                    
-                    // remove selection from row if any is selected
-                    if(activeRow) {
-                        activeRow.className = "";
-                    }
+				tableRow.dataset.filename  = filename;
+				tableRow.dataset.songTitle = title;
+				tableRow.dataset.artist    = artist;
+				tableRow.dataset.album     = album;
 
-                    // assign pointer to current row
-                    activeRow = this;
-                    this.className = "active-row";
+				// add html content to each table cell for row
+				tableCellTitle.innerHTML    = title; 
+				tableCellArtist.innerHTML   = artist;
+				tableCellAlbum.innerHTML    = album;
 
-                    updateStatus();
-                });
+				// append table cells to row
+				tableRow.appendChild(tableCellTitle);
+				tableRow.appendChild(tableCellArtist);
+				tableRow.appendChild(tableCellAlbum);
+
+				playlistContentWrapper.appendChild(tableRow);
+
+				// add click event listener to row
+				tableRow.addEventListener('click', function() {
+				    // send command to play song to server
+				    postCommand('Filter', 'artist="' + this.dataset.artist + '"&title="' + this.dataset.songTitle + '"'); 
+				    
+				    // remove selection from row if any is selected
+				    if(activeRow) {
+				        activeRow.className = "";
+				    }
+
+				    // assign pointer to current row
+				    activeRow = this;
+				    this.className = "active-row";
+
+				    updateStatus();
+				});
             });
 
             // update environment load vars
