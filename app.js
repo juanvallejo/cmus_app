@@ -45,7 +45,9 @@ var os 		= require('os');
 
 // begin environment setup logic; alter environment constants, etc.
 
-if(os.hostname() != 'crunchbang2' || process.argv[2] == 'debug') {
+if((os.hostname() != 'crunchbang2' && process.argv[2] != '--force-no-debug') || process.argv[2] == 'debug') {
+
+	console.log('WARN Debug mode is on.')
 
 	serverIsInDebugMode = true;
 
@@ -53,6 +55,7 @@ if(os.hostname() != 'crunchbang2' || process.argv[2] == 'debug') {
 	APP_TEMP			= __dirname + '/static/temp/temp.mp4'
 
 	CMUS_HOST 			= '192.168.1.7';
+
 }
 
 // declare runtime environment variables
@@ -302,12 +305,16 @@ function handleCmusCommand(request, response) {
 
 			commandResponseAsJSON.result = '1';
 
-			// check to see that command is a YoutubeDl command
 			if(command == 'YouTube') {
 
+				console.log('This is a work in progress');
+
+			} else if(command == 'YouTube-DL') {
+
 				YoutubeDl(commandData, function(err, stdout, stderr) {
+
 					if(err) {
-						return console.log('<Youtube-Dl> An error occurred executing the specified command -> ' + err);
+						return console.log('ERR YTDL', err);
 					}
 
 					if(serverIsInDebugMode) {

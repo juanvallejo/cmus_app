@@ -4,59 +4,104 @@
     <title>cmus on 192.168.1.7</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="shortcut icon" href="/favicon.ico"/>
     <link rel="stylesheet" type="text/css" href="/static/kube.min.css"/>
-    <link rel="stylesheet" type="text/css" href="/static/font-awesome.min.css"/>
+    <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
+	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+	<script   src="https://code.jquery.com/jquery-1.12.3.min.js"   integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ="   crossorigin="anonymous"></script>
     <style type="text/css">
         .wrapper {
             margin: 0 auto;
-            padding: 2em;
-            padding-top: 313px;
+            padding: 20em 0 0 0;
             position: relative;
-            width: 940px;
+            width: 100%;
         }
         	#fixed-wrapper {
         		background: rgba(255,255,255,0.8);
 	    		position: fixed;
-	    		top: 2em;
-	    		width: 940px;
+	    		top: 0;
+	    		left: 0;
+	    		width: 100%;
 	    	}
         .controls {
             font-size: 2.2em;
             padding: 1ex 0;
         }
-
-        .searchbar-input {
-            padding:8px; box-shadow:0; border:1px solid #ccc; min-width:290px; font:inherit; font-size:0.5em;
+        .table-container {
+        	padding: 0 10px;
         }
+
+        .searchbar-wrapper {
+        	border: 0;
+        	box-shadow: none;
+        	max-height: 50px;
+
+        }
+        	.searchbar-gutter {
+        		border: 0;
+        		box-shadow: none;
+        		min-height: 2em;
+        	}
+        	#search {
+        		background: transparent;
+           		padding: 10px 0;
+           		display: block;
+           		min-height: 1em;
+           		text-align: center;
+           		box-shadow: none;
+           		border: 0;
+           		width: 100%;
+           		font-size: 1em;
+        		outline: 0;
+        	}
 
         .active-row {
             background:rgb(38,38,38); color:white;
         }
 
         @media only screen and (min-width: 768px) and (max-width: 959px) {
-            .wrapper { width: 728px; }
+            /*.wrapper { width: 728px; }*/
         }
         @media only screen and (min-width: 480px) and (max-width: 767px) {
-            .wrapper { width: 420px; }
-            .controls { font-size: 1.4em; }
+            /*.wrapper { width: 420px; }*/
+            /*.controls { font-size: 1.4em; }*/
         }
         @media only screen and (max-width: 479px) {
-            .wrapper { width: 300px; }
-            .controls { font-size: 1em; }
+            /*.wrapper { width: 300px; }*/
+            /*.controls { font-size: 1em; }*/
         }
+        #status-vol-control {
+            left: 0;
+        	min-height: 10px;
+            padding: 20px 0;
+            position: absolute;
+            top: 0;
+            width: 100%;
+        }
+        	#status-vol-control .left, #status-vol-control .right {
+        		position: absolute;
+        		top: 0;
+        		width: 50%;
+        		height: 100%;
+        	}
+        	#status-vol-control .left {
+        		left: 0;
+        	}
+        	#status-vol-control .right {
+        		right: 0;
+        	}
+        		#status-vol-control .cmd-btn {
+        			width: 100%;
+        			height: 100%;
+        		}
         #status {
-            overflow: hidden;
             position: relative;
-            min-height: 2em;
-            padding: 1ex 0;
-            background-color: #f5f5f5;
-            border: 1px solid #e3e3e3;
-            -webkit-border-radius: 1ex;
-            -moz-border-radius: 1ex;
-            border-radius: 1ex;
-            -webkit-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-            -moz-box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
-            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.05);
+            min-height: 10px;
+            padding: 20px 0;
+            border-width: 0;
+            border-color: #e3e3e3;
+            border-style: solid;
+            text-align: center;
         }
         #status p {
             display: inline-block;
@@ -66,13 +111,61 @@
         }
         .vol {
             position: absolute;
-            bottom: 0;
+            top: 0;
             right: 1ex;
             font-size: .67em;
+        }
+        .ytmode-btn {
+        	border-radius: 4px;
         }
         #result {
             min-height: 2em;
         }
+
+        #btn-wrapper {
+        	display: block;
+        	min-height: 50px;
+        	position: relative;
+        	text-align: center;
+			width: 100%;
+			min-height: 2em;
+			max-height: 50px;
+        }
+        	#btn-wrapper .cmd-btn {
+        		display: inline-block;
+        		height: 2em;
+        		min-width: 50px;
+        		padding: 0 10px 0 10px;
+        		text-align: center;
+        	}
+        		#btn-wrapper .cmd-btn i {
+        			display: table;
+        		text-align: center;
+
+        			width: 100%;
+        			height: 2em;
+        		}
+        			#btn-wrapper .cmd-btn i:before {
+        				display: table-cell;
+    	    			vertical-align: middle;    	    			
+    	    			font-size: 30px;
+        			}
+
+        #alert-box {
+        	background: #cd3700;
+        	bottom: 0;
+        	color: rgba(255,255,255,0.8);
+        	display: none;
+        	left: 0;
+        	padding: 1em 0;
+        	min-height: 1em;
+        	position: fixed;
+        	text-align: center;
+        	font-size: 1em;
+        	width: 100%;
+        	z-index: 999;
+        }
+
         footer { position: fixed; bottom: 1ex; }
     </style>
 </head>
@@ -80,47 +173,45 @@
 <div class="wrapper">
 <div id="fixed-wrapper">
 	<div id="status"></div>
+	<div id="status-vol-control">
+		<div class="left">
+			<div class="cmd-btn" title="Reduce Volume"></div>
+		</div>
+		<div class="right">
+			<div class="cmd-btn" title="Increase Volume"></div>
+		</div>
+	</div>
 
 	<div class="controls">
 
-	    <span class="btn-group">
-	        <button class="cmd-btn btn" title="Previous"><i class="icon-fast-backward"></i></button>
-	        <button class="cmd-btn btn" title="Play" id="play-button"><i class="icon-play"></i></button>
-	        <button class="cmd-btn btn" title="Stop" id="stop-button"><i class="icon-stop"></i></button>
-	        <button class="cmd-btn btn" title="Next"><i class="icon-fast-forward"></i></button>
-	    </span>
+		<!-- begin modern controls -->
+		<div id="btn-wrapper">
+			<div class="cmd-btn" title="Previous"><i class="icon-fast-backward"></i></div>
+			<div class="cmd-btn" title="Play" id="play-button"><i class="icon-play"></i></div>
+			<div class="cmd-btn" title="Next"><i class="icon-fast-forward"></i></div>
+		</div>
 
-	    <span class="btn-group">
+		<button class="cmd-btn btn hidden" title="Stop" id="stop-button"><i class="icon-stop"></i></button>
+
+	    <span style="display: none;" class="btn-group">
 	        <button class="cmd-btn btn" title="Mute"><i class="icon-volume-off"></i></button>
 	        <button class="cmd-btn btn" title="Reduce Volume"><i class="icon-volume-down"></i></button>
 	        <button class="cmd-btn btn" title="Increase Volume"><i class="icon-volume-up"></i></button>
 	    </span>
 
-	    <button class="status-btn btn btn-round" title="Update Status"><i class="icon-info-sign"></i></button>
+	    <button style="display: none;" small upper class="ytmode-btn btn" title="Update Status"><i class="icon-youtube-sign"></i></button>
 
 	</div>
-
-	<!-- begin volume slider -->
-	<div class="controls">
-	    <span class="btn-group">
-	        <div class="slider-wrapper">
-	            <div class="slider-gutter">
-	                <div class="slider-modal"></div>
-	            </div>
-	        </div>
-	    </span>
-	</div>
-	<!-- end volume slider -->
 
 	<!-- begin searchbar -->
 	<div class="controls">
-	    <span class="btn-group">
+	    <!-- <span class="btn-group"> -->
 	        <div class="searchbar-wrapper">
 	            <div class="searchbar-gutter">
-	                <input type="search" title="Search"  id="search" incremental class="searchbar-input input-search" placeholder="Search library"/>
+	                <input type="search" id="search" incremental class="searchbar-input input-search" placeholder="Search library"/>
 	            </div>
 	        </div>
-	    </span>
+	    <!-- </span> -->
 	</div>
 	<!-- end search bar -->
 	<div id="result"></div>
@@ -146,9 +237,9 @@
     </table>
 </div>
 <!-- end playlist listing -->
-
+<div id="alert-box"></div>
 <footer>
-    <p class="small gray-light"><i class="icon-play-circle"></i> This is <code>cmus</code> running on 192.168.1.7.</p>
+    <!-- <p class="small gray-light"><i class="icon-play-circle"></i> This is <code>cmus</code> running on 192.168.1.7.</p> -->
 </footer>
 
 </div>
@@ -157,11 +248,30 @@
     // define global variables
     var activeRow                   = null;                         // current row of playlist results being highlighted
     var updateStatusTimeout         = null;                         // timeout interval for updating app status
-    var updateStatusTimeoutInterval = 15000;                        // time to wait in between updating app status
+    var updateStatusTimeoutInterval = 2000;                        // time to wait in between updating app status
     var searchHasFiltered           = false;                        // indicates if there are hidden rows due to search
     var filteredSearchResults       = [];                           // contains results that have been filtered - search
     var playlistDataHasLoaded       = false;                        // indicates if data read from playlist has loaded
     var runOnPlaylistDataLoad       = [];                           // contains callback functions to call once playlist results are read from file
+    var youtubeMode 				= false; 						// flag indicating whether youtube mode is on or off
+
+    // toggles youtube mode on or off
+    function toggle_ytmode() {
+
+    }
+
+    function showAlert(text, timeout) {
+    	
+    	clearTimeout(showAlert.timeout);
+
+    	var time = timeout || 3000;
+
+    	$('#alert-box').html(text).hide();
+    	$('#alert-box').slideDown();
+		showAlert.timeout = setTimeout(function() {
+			$('#alert-box').slideUp();
+		}, time);
+    }
 
     // define basic app functions
     function postCommand(command, data){
@@ -182,7 +292,7 @@
             searchbar.value = '';
             searchbar.blur();
 
-            $("div#result").html('<pre>Loading, please wait...</pre>');
+            showAlert('Loading, please wait...');
         }
 
         $.post('/cmd', {command: command, data:(data || '0')}, function(response){
@@ -190,24 +300,24 @@
             var outputResponse = '';
 
             if (response.result == 0) {
-                outputResponse = '<p class="green label"><i class="icon-ok"></i> ' + command + '</p>';
+                outputResponse = command;
             } else {
-                outputResponse = '<p class="red label"><i class="icon-remove"></i> ' + command + '</p>';
+                outputResponse = command;
             }
 
             if(command == 'YouTube') {
                 // if current source of playback is from a youtube video
-                outputResponse += '<pre>Now playing from YouTube video source.</pre>';
+                outputResponse += 'Now playing from YouTube video source.';
                 updateStatus();
 
             } else {
                 // check to see if there is a response from the server
                 if(response.output) {
-                    outputResponse += '<pre>' + response.output + '</pre>';
+                    outputResponse += response.output;
                 }
             }
 
-            $("div#result").html(outputResponse);
+            showAlert(outputResponse);
 
         }, 'json');
     }
@@ -282,18 +392,18 @@
             }
 
             if (response.artist != null & response.title != null & response.album != null & response.date != null)
-                {status += response.artist + ': <strong>' + response.title + '</strong> (' + response.album + ', ' + response.date.substring(0,4) + ')'}
+                {status += response.artist + ' <strong>' + response.title + '</strong> <i>' + response.album + ', ' + response.date.substring(0,4) + '</i>'}
             else if (response.artist != null & response.title != null & response.album != null)
-                {status += response.artist + ': <strong>' + response.title + '</strong> (' + response.album + ')'}
+                {status += response.artist + ' <strong>' + response.title + '</strong><i>' + response.album + '</i>'}
             else if (response.artist != null & response.title != null & response.date != null)
-                {status += response.artist + ': <strong>' + response.title + '</strong> (' + response.date.substring(0,4) + ')'}
+                {status += response.artist + ' <strong>' + response.title + '</strong> (' + response.date.substring(0,4) + ')'}
             else if (response.artist != null & response.title != null)
-                {status += response.artist + ': <strong>' + response.title + '</strong>'}
+                {status += response.artist + ' <strong>' + response.title + '</strong>'}
             else if (response.title != null)
                 {status += '<strong>' + response.title + '</strong>'}
             else if (response.artist != null)
-                {status += response.artist + ': <strong>(unknown)</strong>'}
-            else {status += '<em>none/unknown</em>'}
+                {status += response.artist + '&nbsp;<strong>Unknown</strong>'}
+            else {status += '<em>Unknown</em>'}
             status += '</p><span class="vol gray">';
             if (response.vol_left != null) {status += response.vol_left}
             if (response.shuffle == 'true') {status += ' <i class="icon-random"></i>'}
@@ -406,8 +516,8 @@
         });
     }
 
-    $(".status-btn").on('click', (function() {
-        updateStatus();
+    $(".ytmode-btn").on('click', (function() {
+    	toggle_ytmode();
     }))
     
     document.getElementById('stop-button').addEventListener('click', function() {
