@@ -285,7 +285,7 @@ function handleCmusCommand(request, response) {
 
 			if(command == 'Filter') {
 
-				if(vlcProcess && playing) {
+				if(vlcProcess) {
 					vlcProcess.stdin.write('pause\n');
 				}
 
@@ -323,7 +323,7 @@ function handleCmusCommand(request, response) {
 
             		// update vlc process volume (if exists)
             		if(vlcProcess) {
-            			vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
+            			vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 3) + '\n');
             		}
 
             	}
@@ -508,7 +508,7 @@ function playVideoUri(videoData) {
 		// stop current song and clear playlist
 		vlcProcess.stdin.write('stop\n');
 		vlcProcess.stdin.write('clear\n');
-		vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
+		vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 3) + '\n');
 
 		// add and play new song
 		vlcProcess.stdin.write('add ' + videoUri + '\n');
@@ -537,7 +537,7 @@ function playVideoUri(videoData) {
 
 	});
 
-	vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
+	vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 3) + '\n');
 
 	/**
 	 * Called when a song is switched or ends without interruption
@@ -635,6 +635,7 @@ io.listen(app).on('connection', function(client) {
 			return vlcProcess.stdin.write('pause\n');
 		}
 
+		CmusRemote('-C', 'player-stop');
 		client.broadcast.emit('videocmdplaypause', { data: 'play' });
 		vlcProcess.stdin.write('play\n');
 
