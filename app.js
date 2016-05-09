@@ -323,7 +323,7 @@ function handleCmusCommand(request, response) {
 
             		// update vlc process volume (if exists)
             		if(vlcProcess) {
-            			vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+            			vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
             		}
 
             	}
@@ -508,7 +508,7 @@ function playVideoUri(videoData) {
 		// stop current song and clear playlist
 		vlcProcess.stdin.write('stop\n');
 		vlcProcess.stdin.write('clear\n');
-		vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+		vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
 
 		// add and play new song
 		vlcProcess.stdin.write('add ' + videoUri + '\n');
@@ -537,7 +537,7 @@ function playVideoUri(videoData) {
 
 	});
 
-	vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+	vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 2) + '\n');
 
 	/**
 	 * Called when a song is switched or ends without interruption
