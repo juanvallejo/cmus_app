@@ -1,0 +1,19 @@
+{
+  "name": "cmus_app",
+  "version": "1.0.0",
+  "description": "This is a web app to control a server instance of [`cmus`](http://cmus.sf.net), a powerful music player, remotely. So far it only supports basic player and volume controls, not adding items to the playlist.",
+  "main": "app.js",
+  "dependencies": {
+    "socket.io": "^1.4.6"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "ssh://root@192.168.1.7:/root/Documents/cmus_app"
+  },
+  "author": "juanvallejo",
+  "license": "ISC"
+}
