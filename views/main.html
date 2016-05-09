@@ -297,7 +297,7 @@
 
     // handle socket events
     socket.on('clientupdate', function() {
-    	window.location.refresh();
+    	window.location.reload();
     });
 
     socket.on('videodata', function(data) {
