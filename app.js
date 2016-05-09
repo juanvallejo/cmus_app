@@ -50,7 +50,7 @@ var processData = null; // nowplaying
 var playing 	= false;
 
 var vlcProcessSettings = {
-	vol: 100
+	vol: 50
 };
 
 var clients 	= { length: 0 };
