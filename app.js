@@ -285,6 +285,10 @@ function handleCmusCommand(request, response) {
 
 			if(command == 'Filter') {
 
+				if(vlcProcess && playing) {
+					vlcProcess.stdin.write('pause\n');
+				}
+
 				CmusRemote('-C', cmusCommandFromKeyword[command]);
             	CmusRemote('-C', 'win-add-q');
             	CmusRemote('-C', 'player-next');
