@@ -40,8 +40,20 @@ var APP_TEMP		= '/root/Music/youtube-downloads/temp.mp4';	// defines location of
 
 var fs		= require('fs');
 var http	= require('http');
+var https 	= require('https');
 var exec	= require('child_process').exec;
 var os 		= require('os');
+var io 		= require('socket.io');
+
+var vlcProcess 	= null;
+var processData = null; // nowplaying
+var playing 	= false;
+
+var vlcProcessSettings = {
+	vol: 100
+};
+
+var clients 	= { length: 0 };
 
 // begin environment setup logic; alter environment constants, etc.
 
@@ -286,6 +298,32 @@ function handleCmusCommand(request, response) {
 				response.end(JSON.stringify(commandResponseAsJSON));
 
             } else {
+
+            	// update volume information for vlc process
+            	if(command.match(/(Volume|Mute)$/gi)) {
+            		if(command.match(/Increase/gi)) {
+            			vlcProcessSettings.vol += 5;
+            		} else {
+            			vlcProcessSettings.vol -= 5;
+            		}
+
+            		if(vlcProcessSettings.vol  > 100) {
+            			vlcProcessSettings.vol = 100;
+            		}
+
+            		if(vlcProcessSettings.vol < 0) {
+            			vlcProcessSettings.vol = 0;
+            		}
+
+            		console.log('Global volume updated', vlcProcessSettings.vol);
+
+            		// update vlc process volume (if exists)
+            		if(vlcProcess) {
+            			vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+            		}
+
+            	}
+
             	CmusRemote('-C', cmusCommandFromKeyword[command], function(err, stdout, stderr) {
             		if(err) {
 						return console.log('ERR CMUS An error occurred executing the specified command -> ' + err);
@@ -307,7 +345,12 @@ function handleCmusCommand(request, response) {
 
 			if(command == 'YouTube') {
 
-				console.log('This is a work in progress');
+				fetchVideoResults(commandData, function(data) {
+
+					console.log('YouTube query request completed');
+					response.end(JSON.stringify(data));
+
+				});
 
 			} else if(command == 'YouTube-DL') {
 
@@ -407,8 +450,150 @@ function YoutubeDl(videoURL, callback) {
 	});
 }
 
+/**
+ * Calls function scrapeUri, finds best youtube match from
+ * scraped content and spawns a child process with command-line
+ * vlc to play the video
+ *
+ */
+function fetchVideoResults(query, callback) {
+
+	var protocol 	= https;
+
+	var options = {
+
+		hostname 	: 'www.googleapis.com',
+		path		: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=10&order=relevance&type=video&key=AIzaSyClMhYOSK5GwHoXL7f66Siw4y36BIGwGDM',
+
+	}
+
+	protocol.get(options, function(response) {
+
+		var data = '';
+
+		response.on('data', function(chunk) {
+			data += chunk;
+		});
+
+		response.on('end', function() {
+
+			var videoData 	= JSON.parse(data);
+
+			// return response to client
+			callback.call(this, JSON.stringify({ success: true, message: 'success', data: videoData.items }));
+
+
+		});
+
+	});
+
+}
+
+function playVideoUri(videoData) {
+
+	var videoUri 	= 'https://www.youtube.com/watch?v=' + videoData.data.id.videoId;
+
+	processData 	= videoData;
+	playing 		= true;
+
+	CmusRemote('-C', 'player-stop');
+
+	// determine if vlc child process exists
+	if(vlcProcess) {
+	
+		// stop current song and clear playlist
+		vlcProcess.stdin.write('stop\n');
+		vlcProcess.stdin.write('clear\n');
+		vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+
+		// add and play new song
+		vlcProcess.stdin.write('add ' + videoUri + '\n');
+
+		console.log('Now playing \'' + videoData.data.snippet.title + '\'...');
+
+		return;
+	}
+
+	console.log('> Now playing \'' + videoData.data.snippet.title + '\'...');
+
+	// assume vlc process does not exist and create it
+	var binPath = '/Applications/VLC.app/Contents/MacOS/VLC';
+
+	if(os.type() == 'Linux') {
+		binPath = '/usr/bin/vlc';
+	}
+
+	vlcProcess = exec(binPath + ' --play-and-exit --intf=rc "' + videoUri + '"', function(err, stdout, stderr) {
+
+		if(err) {
+			return console.log('Child Process Error -> ' + err);
+		}
+
+		playing = true;
+
+	});
+
+	vlcProcess.stdin.write('volume ' + (vlcProcessSettings.vol * 4) + '\n');
+
+	/**
+	 * Called when a song is switched or ends without interruption
+	 */
+	vlcProcess.on('exit', function() {
+
+		console.log('process ended');
+
+		// broadcast results to all clients
+		for(var i in clients) {
+			if(clients[i] && clients[i].emit) {
+				clients[i].emit('songended');
+			}
+		}
+
+		playing = false;
+		processExited = true;
+
+	});
+
+	/**
+	 * Called when a song is interrupted or ends
+	 */
+	vlcProcess.on('close', function() {
+		
+		if(processExited) {
+
+			console.log('process exited and closed');
+			processExited = false;
+
+		} else {
+			console.log('process closed without exiting');
+		}
+
+		// garbage collect process
+		vlcProcess = null;
+
+		if(clients) {
+			
+			// tell each client that the song ended
+			for(var i in clients) {
+
+				if(clients[i] && clients[i].emit) {
+					clients[i].emit('songended', { playing: false });
+				}
+
+			}
+
+		}
+
+	});
+
+	vlcProcess.on('message', function(messsage) {
+		console.log('process message -> ' + message);
+	});
+
+}
+
 // create web-interface server, run main app loop
-http.createServer(function(request, response) {
+var app = http.createServer(function(request, response) {
 	// check to see that handling exists in router
 	// for current request
 
@@ -420,4 +605,63 @@ http.createServer(function(request, response) {
 		httpRequestRouter['/static_file'].call(this, request, response);
 	}
 
-}).listen(APP_PORT, APP_HOST);
+});
+
+app.listen(APP_PORT, APP_HOST);
+
+io.listen(app).on('connection', function(client) {
+
+	console.log('client connected');
+
+	clients[client.id] = client;
+	clients.length++;
+
+	if(vlcProcessSettings.videodata && vlcProcess && playing) {
+		client.emit('videodata', { data: vlcProcessSettings.videodata });
+	}
+
+	client.on('videocmdplaypause', function(data) {
+
+		if(!vlcProcess) {
+			return;
+		}
+
+		if(playing && data.data == 'pause') {
+			client.broadcast.emit('videocmdplaypause', { data: 'pause' });
+			return vlcProcess.stdin.write('pause\n');
+		}
+
+		client.broadcast.emit('videocmdplaypause', { data: 'play' });
+		vlcProcess.stdin.write('play\n');
+
+	});
+
+	client.on('volumeinfo', function(data) {
+		vlcProcessSettings.vol = parseInt(data.data);
+	});
+
+	client.on('videodata', function(data) {
+		vlcProcessSettings.videodata = data;
+		playVideoUri(data);
+		client.broadcast.emit('videodata', { data: data });
+	});
+
+	client.on('songdata', function(data) {
+		console.log('client sent data');
+		client.broadcast.emit('songdata', data);
+	});
+
+	client.on('songpause', function() {
+		client.broadcast.emit('songpause');
+	});
+
+	client.on('songplay', function() {
+		client.broadcast.emit('songplay');
+	});
+
+	client.on('disconnect', function() {
+		delete clients[client.id];
+		clients.length--;
+	});
+
+});

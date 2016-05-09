@@ -8,8 +8,16 @@
     <link rel="stylesheet" type="text/css" href="/static/kube.min.css"/>
     <link href="//netdna.bootstrapcdn.com/twitter-bootstrap/2.3.2/css/bootstrap-combined.no-icons.min.css" rel="stylesheet">
 	<link href="//netdna.bootstrapcdn.com/font-awesome/3.2.1/css/font-awesome.css" rel="stylesheet">
+	<script src="/socket.io/socket.io.js"></script>
 	<script   src="https://code.jquery.com/jquery-1.12.3.min.js"   integrity="sha256-aaODHAgvwQW1bFOGXMeX+pC4PZIPsvn2h1sArYOhgXQ="   crossorigin="anonymous"></script>
     <style type="text/css">
+
+    	@import url(https://fonts.googleapis.com/css?family=Roboto:400,300);
+
+    	::-webkit-input-placeholder {
+    		color: #323333 !important;
+		}
+
         .wrapper {
             margin: 0 auto;
             padding: 20em 0 0 0;
@@ -44,19 +52,21 @@
         	}
         	#search {
         		background: transparent;
-           		padding: 10px 0;
-           		display: block;
-           		min-height: 1em;
-           		text-align: center;
            		box-shadow: none;
+           		border-radius: 0;
            		border: 0;
-           		width: 100%;
-           		font-size: 1em;
+           		color: #00b8cd;
+           		display: block;
+        		font: 300 1em 'Roboto';
+           		min-height: 1em;
         		outline: 0;
+           		padding: 10px 0;
+           		text-align: center;
+           		width: 100%;
         	}
 
         .active-row {
-            background:rgb(38,38,38); color:white;
+            color: #00b8cd;
         }
 
         @media only screen and (min-width: 768px) and (max-width: 959px) {
@@ -69,6 +79,9 @@
         @media only screen and (max-width: 479px) {
             /*.wrapper { width: 300px; }*/
             /*.controls { font-size: 1em; }*/
+        }
+        #yt-playlist-content {
+        	display: none;
         }
         #status-vol-control {
             left: 0;
@@ -94,7 +107,14 @@
         			width: 100%;
         			height: 100%;
         		}
-        #status {
+
+        #yt-status {
+        	display: none;
+        }
+        .yt-cmd-btn-disabled {
+        	/*color: rgba(50,51,51, 0.35);*/
+        }
+        #status, #yt-status {
             position: relative;
             min-height: 10px;
             padding: 20px 0;
@@ -103,7 +123,7 @@
             border-style: solid;
             text-align: center;
         }
-        #status p {
+        #status p, #yt-status p {
             display: inline-block;
             margin: 0 1em;
             line-height: 1em;
@@ -122,7 +142,11 @@
             min-height: 2em;
         }
 
-        #btn-wrapper {
+        #yt-btn-wrapper {
+        	display: none;
+        }
+
+        .button-wrapper {
         	display: block;
         	min-height: 50px;
         	position: relative;
@@ -131,21 +155,21 @@
 			min-height: 2em;
 			max-height: 50px;
         }
-        	#btn-wrapper .cmd-btn {
+        	.button-wrapper .button {
         		display: inline-block;
         		height: 2em;
         		min-width: 50px;
         		padding: 0 10px 0 10px;
         		text-align: center;
         	}
-        		#btn-wrapper .cmd-btn i {
+        		.button-wrapper .button i {
         			display: table;
         		text-align: center;
 
         			width: 100%;
         			height: 2em;
         		}
-        			#btn-wrapper .cmd-btn i:before {
+        			.button-wrapper .button i:before {
         				display: table-cell;
     	    			vertical-align: middle;    	    			
     	    			font-size: 30px;
@@ -173,6 +197,7 @@
 <div class="wrapper">
 <div id="fixed-wrapper">
 	<div id="status"></div>
+	<div id="yt-status"><p class="gray"><i>No song currently playing</i></p></div>
 	<div id="status-vol-control">
 		<div class="left">
 			<div class="cmd-btn" title="Reduce Volume"></div>
@@ -185,10 +210,17 @@
 	<div class="controls">
 
 		<!-- begin modern controls -->
-		<div id="btn-wrapper">
-			<div class="cmd-btn" title="Previous"><i class="icon-fast-backward"></i></div>
-			<div class="cmd-btn" title="Play" id="play-button"><i class="icon-play"></i></div>
-			<div class="cmd-btn" title="Next"><i class="icon-fast-forward"></i></div>
+		<div id="btn-wrapper" class="button-wrapper">
+			<div class="button cmd-btn" title="Previous"><i class="icon-fast-backward"></i></div>
+			<div class="button cmd-btn" title="Play" id="play-button"><i class="icon-play"></i></div>
+			<div class="button cmd-btn" title="Next"><i class="icon-fast-forward"></i></div>
+		</div>
+
+		<!-- begin modern yt mode controls -->
+		<div id="yt-btn-wrapper" class="button-wrapper">
+			<div class="button yt-cmd-btn yt-cmd-btn-disabled" title="Previous"><i class="icon-fast-backward"></i></div>
+			<div class="button yt-cmd-btn" title="Play" id="yt-play-button"><i class="icon-play"></i></div>
+			<div class="button yt-cmd-btn yt-cmd-btn-disabled" title="Next"><i class="icon-fast-forward"></i></div>
 		</div>
 
 		<button class="cmd-btn btn hidden" title="Stop" id="stop-button"><i class="icon-stop"></i></button>
@@ -208,7 +240,7 @@
 	    <!-- <span class="btn-group"> -->
 	        <div class="searchbar-wrapper">
 	            <div class="searchbar-gutter">
-	                <input type="search" id="search" incremental class="searchbar-input input-search" placeholder="Search library"/>
+	                <input type="search" id="search" incremental class="searchbar-input input-search" placeholder="Search Library" autocomplete="off"/>
 	            </div>
 	        </div>
 	    <!-- </span> -->
@@ -234,6 +266,9 @@
                 <td class="width-25">album name</td>
             </tr>
         </tbody>
+        <tbody id="yt-playlist-content">
+            
+        </tbody>
     </table>
 </div>
 <!-- end playlist listing -->
@@ -245,6 +280,10 @@
 </div>
 <script src="/static/zepto.min.js"></script>
 <script type="text/javascript">
+
+	// TODO: connect to music server ip address
+ 	var socket = io.connect(window.location.href);
+
     // define global variables
     var activeRow                   = null;                         // current row of playlist results being highlighted
     var updateStatusTimeout         = null;                         // timeout interval for updating app status
@@ -255,8 +294,138 @@
     var runOnPlaylistDataLoad       = [];                           // contains callback functions to call once playlist results are read from file
     var youtubeMode 				= false; 						// flag indicating whether youtube mode is on or off
 
+    // handle socket events
+    socket.on('videodata', function(data) {
+    	updateVideoStatus(data.data);
+    });
+
+    // called when a youtube video ends
+    socket.on('songended', function() {
+    	$('#yt-play-button i')[0].className = 'icon-play';
+    	$('#yt-status').html('<p class="gray"><i>No song currently playing</i></p>');
+    });
+
+    socket.on('videocmdplaypause', function(data) {
+
+    	if(data.data ==  'pause') {
+			$('#yt-play-button i')[0].is_playing = false;
+			$('#yt-play-button i')[0].className = 'icon-play';
+			return;
+		}
+		
+		$('#yt-play-button i')[0].is_playing = true;
+		$('#yt-play-button i')[0].className = 'icon-pause';
+
+    });
+
     // toggles youtube mode on or off
     function toggle_ytmode() {
+
+        showAlert('YouTube mode ' + (youtubeMode ? 'disabled' : 'enabled'));
+    	youtubeMode = !youtubeMode;
+
+    	var searchBar = document.getElementById('search');
+
+    	if(youtubeMode) {
+    		searchBar.value = '';
+    		searchBar.placeholder = 'Search YouTube';
+
+    		$('#playlist-content').hide();
+    		$('#yt-playlist-content').show();
+    		
+    		$('#btn-wrapper').hide();
+    		$('#yt-btn-wrapper').show();
+
+    		$('#status').hide();
+    		$('#yt-status').show();
+
+    		return;
+    	}
+
+    	// assume toggle off
+    	searchBar.placeholder = 'Search Library';
+
+    	$('#playlist-content').show();
+    	$('#yt-playlist-content').hide();
+
+    	$('#btn-wrapper').show();
+    	$('#yt-btn-wrapper').hide();
+
+    	$('#status').show();
+    	$('#yt-status').hide();
+    }
+
+    function updateVideoStatus(data) {
+
+    	$('#yt-play-button i')[0].is_playing = true;
+    	$('#yt-play-button i')[0].className = 'icon-pause';
+
+    	if(!(data && data.data && data.data.snippet)) {
+    		return;
+    	}
+
+    	var youtubeResultsWrapper = document.getElementById('yt-playlist-content');
+    	if(youtubeResultsWrapper.children.length) {
+    		for(var i = 0; i < youtubeResultsWrapper.children.length; i++) {
+    			youtubeResultsWrapper.children[i].className = '';
+    		}
+    	}
+
+    	$('#yt-status').html('<p class="gray">' + data.data.snippet.channelTitle +' <strong>' + data.data.snippet.title + '</strong> <i>YouTube</i></p>');
+    }
+
+    function parseVideoResultData(data) {
+
+    	var youtubeResultsWrapper = document.getElementById('yt-playlist-content');
+    	youtubeResultsWrapper.innerHTML = '';
+
+    	var rows = [];
+
+    	for(var i = 0; i < data.data.length; i++) {
+
+    		var tableRow        = document.createElement('tr');
+			var tableCellTitle  = document.createElement('td');
+			var tableCellArtist = document.createElement('td');
+			var tableCellAlbum  = document.createElement('td');
+
+			tableRow.data 				= data.data[i];
+			tableRow.dataset.length 	= data.data.length;
+			tableRow.dataset.id  		= data.data[i].id.videoId;
+			tableRow.dataset.songTitle 	= data.data[i].snippet.title;
+			tableRow.dataset.artist    	= data.data[i].snippet.channelTitle;
+			tableRow.dataset.album     	= data.data[i].snippet.description;
+
+			// add html content to each table cell for row
+			tableCellTitle.innerHTML    = data.data[i].snippet.title; 
+			tableCellArtist.innerHTML   = data.data[i].snippet.channelTitle;
+			tableCellAlbum.innerHTML    = data.data[i].snippet.description;
+
+			// append table cells to row
+			tableRow.appendChild(tableCellTitle);
+			tableRow.appendChild(tableCellArtist);
+			tableRow.appendChild(tableCellAlbum);
+
+			tableRow.addEventListener('click', function() {
+
+				// send current song info to server
+				socket.emit('videodata', { data: this.data });
+
+				$('#yt-status').html('<p class="gray">' + this.dataset.artist +' <strong>' + this.dataset.songTitle + '</strong> <i>YouTube</i></p>');
+
+				for(var x = 0; x < rows.length; x++) {
+					rows[x].className = '';
+				}
+
+				$('#yt-play-button i')[0].className = 'icon-pause';
+				$('#yt-play-button i')[0].is_playing = true;
+
+				this.className = 'active-row';
+
+			});
+
+			rows.push(tableRow);
+			youtubeResultsWrapper.appendChild(tableRow);
+    	}
 
     }
 
@@ -274,7 +443,8 @@
     }
 
     // define basic app functions
-    function postCommand(command, data){
+    function postCommand(command, data, callback){
+
         var playButton = document.getElementById('play-button');
         var searchbar = document.getElementById('search');
         
@@ -305,19 +475,16 @@
                 outputResponse = command;
             }
 
-            if(command == 'YouTube') {
-                // if current source of playback is from a youtube video
-                outputResponse += 'Now playing from YouTube video source.';
-                updateStatus();
-
+            if(callback && typeof callback == 'function') {
+            	callback.call(this, response);
             } else {
-                // check to see if there is a response from the server
+                
                 if(response.output) {
-                    outputResponse += response.output;
+                    outputResponse = response.output;
                 }
-            }
 
-            showAlert(outputResponse);
+                showAlert(outputResponse);
+            }
 
         }, 'json');
     }
@@ -328,13 +495,12 @@
      * 'cmus-remote -Q'
      */
     function updateStatus() {
-        // define and reset status interval counter
+
         clearTimeout(updateStatusTimeout);
         updateStatusTimeout = setTimeout(function() {
             updateStatus()
         }, updateStatusTimeoutInterval);
        
-       // make status request to server
         $.ajax({url: '/status', dataType: 'json', context: $("div#status"), success: function(response){
             var status = '<p>';
             var playButton = document.getElementById('play-button');
@@ -402,13 +568,26 @@
             else if (response.title != null)
                 {status += '<strong>' + response.title + '</strong>'}
             else if (response.artist != null)
-                {status += response.artist + '&nbsp;<strong>Unknown</strong>'}
-            else {status += '<em>Unknown</em>'}
+                {status += response.artist + ' <strong>Unknown</strong>'}
+            else {status += ' <em>Unknown</em>'}
             status += '</p><span class="vol gray">';
-            if (response.vol_left != null) {status += response.vol_left}
+            if (response.vol_left != null) {
+            	status += response.vol_left
+
+            	// send volume information to server
+            	socket.emit('volumeinfo', { data: response.vol_left });
+            }
             if (response.shuffle == 'true') {status += ' <i class="icon-random"></i>'}
             if (response.repeat == 'true') {status += ' <i class="icon-refresh"></i>'}
             status += '</span>';
+
+        	if(youtubeMode) {
+        		if(!$('#yt-status span.vol').length) {
+        			$('#yt-status').append('<span class="vol gray"></span>');
+        		}
+        		$('#yt-status span.vol').html(response.vol_left);
+        	}
+
             this.html(status)
         }})
     }
@@ -548,6 +727,7 @@
     });
 
     $('.searchbar-input').on('keypress', function(e) {
+
         if(e.keyCode == 13) {
             e.preventDefault();
             
@@ -556,13 +736,49 @@
                 return false;
             }
 
+            // detect local command
+            if(this.value == '/yt') {
+            	this.value = '';
+            	toggle_ytmode();
+            	return;
+            }
+
             if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi)) {
 
                 var commandData = this.value.split('?v='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
                 commandData = 'https://www.youtube.com/v/' + commandData[1].split('&')[0];
 
-                postCommand('YouTube', commandData);
+                postCommand('YouTube-DL', commandData);
                 return;
+            }
+
+            // detect youtube mode
+            if(youtubeMode) {
+
+            	var cmdData = this.value;
+
+            	showAlert('Searching YouTube, please wait...', 15000);
+
+            	this.value = '';
+            	this.blur();
+            	
+            	return postCommand('YouTube', cmdData, function(data) {
+
+            		try {
+
+            			showAlert('Fetching results, please wait...');
+            			
+            			var results = JSON.parse(data);
+            			parseVideoResultData(results);
+
+            		} catch(e) {
+            			console.log(e);
+            			showAlert('An error occurred fetching video results. Please try again.');
+            		}
+
+            		
+            	});
+
             }
                 
             var playlistContentWrapper  = document.getElementById('playlist-content');
@@ -596,9 +812,44 @@
         }
     });
 
+	var fixedWrapperTimeout = null;
+	var fixedWrapperTimeoutClick = 0;
+
+	$('#yt-play-button').on('click', function() {
+
+		if($('#yt-play-button i')[0].is_playing) {
+			$('#yt-play-button i')[0].is_playing = false;
+			$('#yt-play-button i')[0].className = 'icon-play';
+			socket.emit('videocmdplaypause', { data: 'pause' });
+			return;
+		}
+
+		$('#yt-play-button i')[0].is_playing = true;
+		$('#yt-play-button i')[0].className = 'icon-pause';
+		socket.emit('videocmdplaypause', { data: 'play' });
+
+	});
+
+	$('#fixed-wrapper').on('click', function(e) {
+		
+		e.preventDefault();	
+
+		fixedWrapperTimeoutClick++;
+
+		if(fixedWrapperTimeoutClick > 1) {
+			fixedWrapperTimeoutClick = 0;
+			toggle_ytmode();
+		}
+
+		clearTimeout(fixedWrapperTimeout);
+		fixedWrapperTimeout = setTimeout(function() {
+			fixedWrapperTimeoutClick = 0;
+		}, 800);
+	});
+	
     $("div#result").on('click', (function(){
         $(this).empty()
-    }))
+    }));
 
     /**
      * Main app function
