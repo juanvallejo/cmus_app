@@ -293,8 +293,13 @@
     var playlistDataHasLoaded       = false;                        // indicates if data read from playlist has loaded
     var runOnPlaylistDataLoad       = [];                           // contains callback functions to call once playlist results are read from file
     var youtubeMode 				= false; 						// flag indicating whether youtube mode is on or off
+    var has_sent_volumeinfo 		= false;
 
     // handle socket events
+    socket.on('clientupdate', function() {
+    	window.location.refresh();
+    });
+
     socket.on('videodata', function(data) {
     	updateVideoStatus(data.data);
     });
@@ -575,7 +580,10 @@
             	status += response.vol_left
 
             	// send volume information to server
-            	socket.emit('volumeinfo', { data: response.vol_left });
+            	if(!has_sent_volumeinfo) {
+            		has_sent_volumeinfo = true;
+            		socket.emit('volumeinfo', { data: response.vol_left });
+            	}
             }
             if (response.shuffle == 'true') {status += ' <i class="icon-random"></i>'}
             if (response.repeat == 'true') {status += ' <i class="icon-refresh"></i>'}
@@ -740,6 +748,12 @@
             if(this.value == '/yt') {
             	this.value = '';
             	toggle_ytmode();
+            	return;
+            }
+
+            if(this.value == '/update' || this.value == '/refresh') {
+            	this.value = '';
+            	socket.emit('clientupdate');
             	return;
             }
 

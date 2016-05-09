@@ -669,6 +669,11 @@ io.listen(app).on('connection', function(client) {
 		client.broadcast.emit('songplay');
 	});
 
+	client.on('clientupdate', function() {
+		client.emit('clientupdate');
+		client.broadcast.emit('clientupdate');
+	});
+
 	client.on('disconnect', function() {
 		delete clients[client.id];
 		clients.length--;
