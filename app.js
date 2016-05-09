@@ -286,6 +286,11 @@ function handleCmusCommand(request, response) {
 			if(command == 'Filter') {
 
 				if(vlcProcess) {
+					for(var i in clients) {
+						if(clients[i] && clients[i].emit) {
+							clients[i].emit('videocmdplaypause', { data: 'pause' });
+						}
+					}
 					vlcProcess.stdin.write('pause\n');
 				}
 
