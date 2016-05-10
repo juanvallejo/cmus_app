@@ -646,6 +646,14 @@ io.listen(app).on('connection', function(client) {
 
 	});
 
+	client.on('videocmdfastforward', function() {
+		if(!vlcProcess) {
+			return;
+		}
+		console.log('Jumping ahead by 5 seconds');
+		vlcProcess.stdin.write('seek +5\n');
+	});
+
 	client.on('volumeinfo', function(data) {
 		vlcProcessSettings.vol = parseInt(data.data);
 	});
