@@ -218,9 +218,9 @@
 
 		<!-- begin modern yt mode controls -->
 		<div id="yt-btn-wrapper" class="button-wrapper">
-			<div class="button yt-cmd-btn yt-cmd-btn-disabled" title="Previous" id="yt-prev-button"><i class="icon-fast-backward"></i></div>
+			<div class="button yt-cmd-btn" title="Previous" id="yt-prev-button"><i class="icon-fast-backward"></i></div>
 			<div class="button yt-cmd-btn" title="Play" id="yt-play-button"><i class="icon-play"></i></div>
-			<div class="button yt-cmd-btn yt-cmd-btn-disabled" title="Next" id="yt-next-button"><i class="icon-fast-forward"></i></div>
+			<div class="button yt-cmd-btn" title="Next" id="yt-next-button"><i class="icon-fast-forward"></i></div>
 		</div>
 
 		<button class="cmd-btn btn hidden" title="Stop" id="stop-button"><i class="icon-stop"></i></button>
@@ -848,6 +848,11 @@
 	$('#yt-next-button').on('click', function() {
 		showAlert('Fast-forward video');
 		socket.emit('videocmdfastforward');
+	});
+
+	$('#yt-prev-button').on('click', function() {
+		showAlert('Rewind video');
+		socket.emit('videocmdrewind');
 	});
 
 	$('#fixed-wrapper').on('click', function(e) {

@@ -650,8 +650,14 @@ io.listen(app).on('connection', function(client) {
 		if(!vlcProcess) {
 			return;
 		}
-		console.log('Jumping ahead by 5 seconds');
 		vlcProcess.stdin.write('seek +5\n');
+	});
+
+	client.on('videocmdrewind', function() {
+		if(!vlcProcess) {
+			return;
+		}
+		vlcProcess.stdin.write('seek -5\n');
 	});
 
 	client.on('volumeinfo', function(data) {
