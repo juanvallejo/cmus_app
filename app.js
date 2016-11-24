@@ -360,7 +360,7 @@ function handleCmusCommand(request, response) {
 
 				fetchVideoResults(commandData, function(data) {
 
-					console.log('YouTube query request completed with data', data);
+					console.log('YouTube query request completed');
 					response.end(JSON.stringify(data));
 
 				});
@@ -537,6 +537,7 @@ function playVideoUri(videoData) {
 	var binPath = '/Applications/VLC.app/Contents/MacOS/VLC';
 
 	if (os.type() == 'Linux') {
+		console.log('INFO', 'Detected Linux OS');
 		binPath = '/usr/bin/vlc';
 	}
 
@@ -603,6 +604,10 @@ function playVideoUri(videoData) {
 
 		}
 
+	});
+
+	vlcProcess.on('error', function(err) {
+		console.log('VLC process error ->', err);
 	});
 
 	vlcProcess.on('message', function(messsage) {
