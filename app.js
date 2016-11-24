@@ -360,7 +360,7 @@ function handleCmusCommand(request, response) {
 
 				fetchVideoResults(commandData, function(data) {
 
-					console.log('YouTube query request completed');
+					console.log('YouTube query request completed with data', data);
 					response.end(JSON.stringify(data));
 
 				});
@@ -470,14 +470,10 @@ function YoutubeDl(videoURL, callback) {
  *
  */
 function fetchVideoResults(query, callback) {
-
 	var protocol = https;
-
 	var options = {
-
 		hostname: 'www.googleapis.com',
 		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=10&order=relevance&type=video&key=AIzaSyClMhYOSK5GwHoXL7f66Siw4y36BIGwGDM',
-
 	}
 
 	protocol.get(options, function(response) {
@@ -491,6 +487,7 @@ function fetchVideoResults(query, callback) {
 		response.on('end', function() {
 
 			var videoData = JSON.parse(data);
+			console.log('INFO', 'received data from YouTube api', videoData);
 
 			// return response to client
 			callback.call(this, JSON.stringify({
