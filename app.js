@@ -366,7 +366,7 @@ function handleCmusCommand(request, response) {
 				});
 
 			} else if (command == 'YouTube-DL') {
-
+				console.log('Downloading source video to', APP_TEMP, '...');
 				YoutubeDl(commandData, function(err, stdout, stderr) {
 
 					if (err) {
