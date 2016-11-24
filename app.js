@@ -473,7 +473,7 @@ function fetchVideoResults(query, callback) {
 	var protocol = https;
 	var options = {
 		hostname: 'www.googleapis.com',
-		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=10&order=relevance&type=video&key=AIzaSyClMhYOSK5GwHoXL7f66Siw4y36BIGwGDM',
+		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=10&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ',
 	}
 
 	protocol.get(options, function(response) {
