@@ -757,7 +757,7 @@
             	return;
             }
 
-            if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi)) {
+            if(this.value.match(/^(http(s|)\:\/\/)(www\.)?(youtube)(\.com)/gi) && !youtubeMode) {
 
                 var commandData = this.value.split('?v='); // https://www.youtube.com/watch?v=RIFsh_hMhGE
                 commandData = 'https://www.youtube.com/v/' + commandData[1].split('&')[0];
