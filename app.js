@@ -35,6 +35,7 @@ var APP_HOST = '0.0.0.0'; // localhost address for hosting app server
 var APP_INDEX = 'views/main.html'; // defines location of main 'index.html' document
 var APP_PLAYLIST = 'test.pl'; // defines location of main playlist file
 var APP_TEMP = '/root/Music/youtube-downloads/temp.mp4'; // defines location of temporary youtube files
+var MAX_YT_QUERY_RESULTS = 50;
 
 // import dependencies and working modules
 
@@ -473,7 +474,7 @@ function fetchVideoResults(query, callback) {
 	var protocol = https;
 	var options = {
 		hostname: 'www.googleapis.com',
-		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=10&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ',
+		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ',
 	}
 
 	protocol.get(options, function(response) {
