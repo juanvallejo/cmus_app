@@ -515,7 +515,7 @@ function fetchVideoResults(query, callback) {
 
 function playVideoUri(videoData) {
 
-	var videoUri = 'https://www.youtube.com/watch?v=' + videoData.data.id.videoId;
+	var videoUri = 'https://www.youtube.com/watch?v=' + (videoData.data.id.videoId || videoData.data.id);
 
 	processData = videoData;
 	playing = true;
