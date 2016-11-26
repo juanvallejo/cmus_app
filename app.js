@@ -697,6 +697,7 @@ io.listen(app).on('connection', function(client) {
 
 	client.on('videodata', function(data) {
 		vlcProcessSettings.videodata = data;
+		console.log('received video data from client', data);
 		playVideoUri(data);
 		client.broadcast.emit('videodata', {
 			data: data
