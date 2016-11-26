@@ -471,10 +471,19 @@ function YoutubeDl(videoURL, callback) {
  *
  */
 function fetchVideoResults(query, callback) {
+	var apiPath = '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ';
+
+	// determine if query is a video URL
+	if (query.match(/http(s)?\:\/\/(www\.)?(youtube\.com)?(\/watch\?v\=)(\/[a-z0-9\_\+])/gi)) {
+		var videoId = query.split('watch?v=')[1];
+		apiPath = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + videoId + '&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ';
+		console.log('detected YouTube video URL, parsing...', videoId);
+	}
+
 	var protocol = https;
 	var options = {
 		hostname: 'www.googleapis.com',
-		path: '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ',
+		path: apiPath
 	}
 
 	protocol.get(options, function(response) {
