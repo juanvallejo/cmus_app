@@ -698,9 +698,15 @@ function onVlcProcessEnd(songData) {
 				playVideoUri({
 					data: relatedData.data[0]
 				});
-				client.emit('videodata', {
-					data: vlcProcessSettings.videodata
-				});
+
+				// broadcast results to all clients
+				for (var i in clients) {
+					if (clients[i] && clients[i].emit) {
+						clients[i].emit('videodata', {
+							data: vlcProcessSettings.videodata
+						});
+					}
+				}
 				return;
 			}
 			console.log('ERR', 'invalid relatedData object');
