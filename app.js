@@ -30,12 +30,16 @@ var CMUS_HOST = '0.0.0.0'; // host running cmus (with --listen <host>)
 var CMUS_PASS = 'password'; // cmus server password
 var CMUS_PORT = 8000; // port cmus server listens on
 
+var API_KEY = 'AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ';
+
 var APP_PORT = 8080; // port app server will listen on
 var APP_HOST = '0.0.0.0'; // localhost address for hosting app server
 var APP_INDEX = 'views/main.html'; // defines location of main 'index.html' document
 var APP_PLAYLIST = 'test.pl'; // defines location of main playlist file
 var APP_TEMP = '/root/Music/youtube-downloads/temp.mp4'; // defines location of temporary youtube files
 var MAX_YT_QUERY_RESULTS = 50;
+
+var RADIO_MODE = true; // continue playback with youtube videos related to the last song played
 
 // import dependencies and working modules
 
@@ -471,12 +475,12 @@ function YoutubeDl(videoURL, callback) {
  *
  */
 function fetchVideoResults(query, callback) {
-	var apiPath = '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ';
+	var apiPath = '/youtube/v3/search?part=snippet&q=' + encodeURIComponent(query) + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=' + API_KEY;
 
 	// determine if query is a video URL
 	if (query.match(/http(s)?\:\/\/(www\.)?(youtube\.com)?(\/watch\?v\=)([a-z0-9\_]+)/gi)) {
 		var videoId = query.split('watch?v=')[1];
-		apiPath = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + videoId + '&key=AIzaSyCJeM6TxsMb5Ie2JeWswUj0e4Du3JmFbPQ';
+		apiPath = 'https://www.googleapis.com/youtube/v3/videos?part=snippet&id=' + videoId + '&key=' + API_KEY;
 		console.log('detected YouTube video URL, parsing...', videoId);
 	}
 
@@ -498,6 +502,48 @@ function fetchVideoResults(query, callback) {
 
 			var videoData = JSON.parse(data);
 			console.log('INFO', 'received data from YouTube api', videoData);
+
+			// return response to client
+			callback.call(this, JSON.stringify({
+				success: true,
+				message: 'success',
+				data: videoData.items
+			}));
+
+
+		});
+
+	});
+
+}
+
+/**
+ * Receives a youtube video id, finds related youtube matches from
+ * id, and spawns a child process with command-line vlc to play the video
+ */
+function fetchRelatedVideoResults(videoId, callback) {
+	console.log('INFO', 'Attempting to fetch results related to video with id', videoId);
+
+	var apiPath = '/youtube/v3/search?part=snippet&relatedToVideoId=' + videoId + '&maxResults=' + MAX_YT_QUERY_RESULTS + '&order=relevance&type=video&key=' + API_KEY;
+
+	var protocol = https;
+	var options = {
+		hostname: 'www.googleapis.com',
+		path: apiPath
+	}
+
+	protocol.get(options, function(response) {
+
+		var data = '';
+
+		response.on('data', function(chunk) {
+			data += chunk;
+		});
+
+		response.on('end', function() {
+
+			var videoData = JSON.parse(data);
+			console.log('INFO', 'received related video data from YouTube api');
 
 			// return response to client
 			callback.call(this, JSON.stringify({
@@ -580,6 +626,9 @@ function playVideoUri(videoData) {
 		playing = false;
 		processExited = true;
 
+		// handle process end
+		// onVlcProcessEnd(vlcProcessSettings.videodata);
+
 	});
 
 	/**
@@ -614,6 +663,9 @@ function playVideoUri(videoData) {
 
 		}
 
+		// handle process end
+		onVlcProcessEnd(vlcProcessSettings.videodata);
+
 	});
 
 	vlcProcess.on('error', function(err) {
@@ -624,6 +676,33 @@ function playVideoUri(videoData) {
 		console.log('process message -> ' + message);
 	});
 
+}
+
+// handler for vlc process 'end' and 'exit' events
+function onVlcProcessEnd(songData) {
+	if (RADIO_MODE) {
+		if (!songData.data.id) {
+			console.log('ERR', 'video id not found. Unable to fetch related video data for songData', songData);
+			return;
+		}
+
+		console.log('INFO', 'radio mode on... Song ended or process was interrupted.');
+		fetchRelatedVideoResults(songData.data.id.videoId || songData.data.id, function(relatedString) {
+			var relatedData = JSON.parse(relatedString);
+			if (relatedData.success && relatedData.data && relatedData.data.length) {
+				console.log('INFO', 'received relatedData results for video id', songData.data.id);
+
+				vlcProcessSettings.videodata = {
+					data: relatedData.data[0]
+				};
+				playVideoUri({
+					data: relatedData.data[0]
+				});
+				return;
+			}
+			console.log('ERR', 'invalid relatedData object');
+		});
+	}
 }
 
 // create web-interface server, run main app loop
