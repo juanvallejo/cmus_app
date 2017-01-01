@@ -55,7 +55,7 @@ var processData = null; // nowplaying
 var playing = false;
 
 var vlcProcessSettings = {
-	vol: 50
+	vol: 50,
 };
 
 var clients = {
@@ -582,7 +582,7 @@ function playVideoUri(videoData) {
 		// add and play new song
 		vlcProcess.stdin.write('add ' + videoUri + '\n');
 
-		console.log('Now playing \'' + videoData.data.snippet.title + '\'...');
+		console.log('[Reused process] Now playing \'' + videoData.data.snippet.title + '\'...');
 
 		return;
 	}
@@ -625,9 +625,6 @@ function playVideoUri(videoData) {
 
 		playing = false;
 		processExited = true;
-
-		// handle process end
-		// onVlcProcessEnd(vlcProcessSettings.videodata);
 
 	});
 
@@ -692,11 +689,12 @@ function onVlcProcessEnd(songData) {
 			if (relatedData.success && relatedData.data && relatedData.data.length) {
 				console.log('INFO', 'received relatedData results for video id', songData.data.id);
 
+				var idx = parseInt(Math.random() * (relatedData.data.length / 2));
 				vlcProcessSettings.videodata = {
-					data: relatedData.data[0]
+					data: relatedData.data[idx]
 				};
 				playVideoUri({
-					data: relatedData.data[0]
+					data: relatedData.data[idx]
 				});
 
 				// broadcast results to all clients
@@ -779,13 +777,21 @@ io.listen(app).on('connection', function(client) {
 		vlcProcess.stdin.write('seek -5\n');
 	});
 
+	client.on('videocmdskip', function() {
+		if (!vlcProcess) {
+			return;
+		}
+		console.log('INFO', 'skipping video...');
+		vlcProcess.stdin.write('stop\n');
+		vlcProcess.stdin.write('quit\n');
+	});
+
 	client.on('volumeinfo', function(data) {
 		vlcProcessSettings.vol = parseInt(data.data);
 	});
 
 	client.on('videodata', function(data) {
 		vlcProcessSettings.videodata = data;
-		console.log('received video data from client', data);
 		playVideoUri(data);
 		client.broadcast.emit('videodata', {
 			data: data
@@ -793,7 +799,6 @@ io.listen(app).on('connection', function(client) {
 	});
 
 	client.on('songdata', function(data) {
-		console.log('client sent data');
 		client.broadcast.emit('songdata', data);
 	});
 
