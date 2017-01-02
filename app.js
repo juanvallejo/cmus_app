@@ -786,6 +786,14 @@ io.listen(app).on('connection', function(client) {
 		vlcProcess.stdin.write('quit\n');
 	});
 
+	client.on('videocmdreset', function() {
+		if (!vlcProcess) {
+			return;
+		}
+		console.log('INFO', 'resetting current song...');
+		vlcProcess.stdin.write('seek 0\n');
+	});
+
 	client.on('volumeinfo', function(data) {
 		vlcProcessSettings.vol = parseInt(data.data);
 	});

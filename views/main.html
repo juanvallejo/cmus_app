@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-    <title>cmus on 192.168.1.7</title>
+    <title>Music Server</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="shortcut icon" href="/static/favicon.ico"/>
@@ -283,6 +283,11 @@
 <script src="/static/zepto.min.js"></script>
 <script type="text/javascript">
 
+    // detect debug mode
+    if(window.location.hostname == 'localhost') {
+        document.title = ('[DEBUG] ' + document.title);
+    }
+
 	// TODO: connect to music server ip address
  	var socket = io.connect(window.location.href);
 
@@ -296,6 +301,14 @@
     var runOnPlaylistDataLoad       = [];                           // contains callback functions to call once playlist results are read from file
     var youtubeMode 				= false; 						// flag indicating whether youtube mode is on or off
     var has_sent_volumeinfo 		= false;
+
+    socket.on('connect', function() {
+        showAlert('Server connection established.');
+    });
+
+    socket.on('disconnect', function() {
+        showAlert('Server connection lost...', false);
+    });
 
     // handle socket events
     socket.on('clientupdate', function() {
@@ -444,6 +457,11 @@
 
     	$('#alert-box').html(text).hide();
     	$('#alert-box').slideDown();
+
+        if(timeout === false || timeout === null) {
+            return;
+        }
+
 		showAlert.timeout = setTimeout(function() {
 			$('#alert-box').slideUp();
 		}, time);
@@ -861,6 +879,12 @@
     $('#yt-skip-next-button').on('click', function() {
         showAlert('Skipping to next related video');
         socket.emit('videocmdskip');
+    });
+
+    // reset track to the beginning
+    $('#yt-skip-prev-button').on('click', function() {
+        showAlert('Re-starting currently playing song...');
+        socket.emit('videocmdreset');
     });
 
 	$('#fixed-wrapper').on('click', function(e) {
